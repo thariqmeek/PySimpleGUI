@@ -1,0 +1,55 @@
+import PySimpleGUI as sg
+import sqlite3
+l=[]
+j=[]
+count=0
+thisdict={}
+db=sqlite3.connect('mydb')
+conn=sqlite3.connect('mydb')
+cur = db.cursor()
+#cur.execute('''CREATE TABLE users(Name TEXT,work TEXT)''')
+db.commit()
+layout=[[sg.Text("Enter Your Name"),sg.InputText("",key='Name'),sg.Text("Enter Your Today's work"),sg.InputText("",key='todo')],
+[sg.Button("OK"),sg.Button("Finish"),sg.Button("view"),sg.Button("Remove All")],
+]
+win1=sg.Window('My First GUI').Layout(layout)
+
+while True:
+    button,values=win1.Read(timeout=100)
+    if button =='OK':
+        thisdict.update({values['Name']: values['todo']})
+        win1.FindElement('todo').Update("")
+        win1.FindElement('Name').Update("")
+        x=values['Name']
+        y=values['todo']
+        cur.execute('''INSERT INTO users (Name,work) VALUES(?,?) ''' ,(x,y))
+        db.commit()
+        j.append(values['Name'])
+        l.append(values['todo'])
+        win1.FindElement('Name').Update("")
+        win1.FindElement('todo').Update("")
+        cur.execute(('''Select Name,work FROM users'''))
+        all_rows=cur.fetchall()
+        print(thisdict)
+    if button=='view':
+
+        print("view clicked")
+        layout1 = [[sg.Listbox(values=all_rows,size=(90,6))]]
+        #window1 = sg.win2('My GUI').layout(layout1)
+        win2 = sg.Window('Window 2').Layout(layout1)
+        button1, values = win2.Read(timeout=100)
+        #ev2, vals2 = win2.Read(timeout=100)
+        cur.execute(('''Select Name,work FROM users'''))
+        all_rows = cur.fetchall()
+
+
+    if button =='Finish':
+        sg.Popup('Todays list is',thisdict.keys(),thisdict.values())
+        break
+
+    if button =='Remove All':
+        cur.execute('''DELETE FROM  Users''')
+        db.commit()
+for row in all_rows:
+    print('{0}\t{1}\t'.format(row[0],row[1]) )
+
